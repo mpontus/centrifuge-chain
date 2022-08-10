@@ -35,14 +35,21 @@
 
 
           # This instantiates a new Rust version based on nightly-date.
-          nightlyRustPlatform = pkgs.makeRustPlatform {
-            inherit
-              (inputs.fenix.packages.${system}.toolchainOf {
+          nightlyRustPlatform = with inputs.fenix.packages.${system}; let
+            target = "wasm32-unknown-unknown";
+            nightly = toolchainOf {
                 channel = "nightly";
                 date = nightly-date;
                 sha256 = nightly-sha256;
-              })
-              cargo rustc;
+            };
+            toolchain = combine [
+              nightly.cargo
+              nightly.rustc
+              targets.${target}.latest.rust-std
+            ];
+          in pkgs.makeRustPlatform {
+              cargo = toolchain;
+              rustc = toolchain;
           };
 
           # This is a mock git program, which just returns the commit-substr value.

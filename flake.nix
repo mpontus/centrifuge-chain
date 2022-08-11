@@ -15,13 +15,16 @@
       url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    naersk = {
+      url = "github:nmattia/naersk";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs:
     inputs.flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = inputs.nixpkgs.legacyPackages.${system};
-        fenix = inputs.fenix.packages.${system};
 
         cargoTOML = builtins.fromTOML (builtins.readFile ./Cargo.toml);
 
@@ -29,13 +32,14 @@
         # This is the program version.
         version = cargoTOML.package.version;
 
+        fenix = inputs.fenix.packages.${system};
         toolchain = fenix.fromToolchainFile {
           file = ./rust-toolchain.toml;
           sha256 = "sha256-CNMj0ouNwwJ4zwgc/gAeTYyDYe0botMoaj/BkeDTy4M=";
         };
-        nightlyRustPlatform = pkgs.makeRustPlatform {
-          rustc = toolchain;
+        naersk = pkgs.callPackage inputs.naersk {
           cargo = toolchain;
+          rustc = toolchain;
         };
 
         # This is a mock git program, which just returns the commit-substr value.
@@ -72,7 +76,7 @@
           isGitIgnored path type
           && builtins.all (name: builtins.baseNameOf path != name) ignoreList;
       in rec {
-        defaultPackage = nightlyRustPlatform.buildRustPackage {
+        defaultPackage = naersk.buildPackage {
           pname = name;
           inherit version;
 
@@ -96,6 +100,7 @@
 
           LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
           PROTOC = "${pkgs.protobuf}/bin/protoc";
+          singleStep = true;
 
           doCheck = false;
         };

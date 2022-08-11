@@ -21,38 +21,22 @@
     inputs.flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = inputs.nixpkgs.legacyPackages.${system};
+        fenix = inputs.fenix.packages.${system};
 
         cargoTOML = builtins.fromTOML (builtins.readFile ./Cargo.toml);
-        rustToolChainTOML =
-          builtins.fromTOML (builtins.readFile ./rust-toolchain.toml);
 
         name = cargoTOML.package.name;
         # This is the program version.
         version = cargoTOML.package.version;
-        # This selects a nightly Rust version, based on the date.
-        nightly-date = pkgs.lib.strings.removePrefix "nightly-"
-          rustToolChainTOML.toolchain.channel;
-        # This is the hash of the Rust toolchain at nightly-date, required for reproducibility.
-        nightly-sha256 = "sha256-CNMj0ouNwwJ4zwgc/gAeTYyDYe0botMoaj/BkeDTy4M=";
 
-        # This instantiates a new Rust version based on nightly-date.
-        target = "wasm32-unknown-unknown";
-        nightlyRustPlatform = with inputs.fenix.packages.${system};
-          let
-            # nightly = toolchainOf {
-            #     channel = "nightly";
-            #     date = nightly-date;
-            #     sha256 = nightly-sha256;
-            # };
-            toolchain = combine [
-              latest.cargo
-              latest.rustc
-              targets.${target}.latest.rust-std
-            ];
-          in pkgs.makeRustPlatform {
-            cargo = toolchain;
-            rustc = toolchain;
-          };
+        toolchain = fenix.fromToolchainFile {
+          file = ./rust-toolchain.toml;
+          sha256 = "sha256-CNMj0ouNwwJ4zwgc/gAeTYyDYe0botMoaj/BkeDTy4M=";
+        };
+        nightlyRustPlatform = pkgs.makeRustPlatform {
+          rustc = toolchain;
+          cargo = toolchain;
+        };
 
         # This is a mock git program, which just returns the commit-substr value.
         # It is called when the build process calls git. Instead of the real git,

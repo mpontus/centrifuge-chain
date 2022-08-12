@@ -19,6 +19,10 @@
       url = "github:nmattia/naersk";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    crane = {
+      url = "github:ipetkov/crane";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs:
@@ -37,10 +41,7 @@
           file = ./rust-toolchain.toml;
           sha256 = "sha256-CNMj0ouNwwJ4zwgc/gAeTYyDYe0botMoaj/BkeDTy4M=";
         };
-        naersk = pkgs.callPackage inputs.naersk {
-          cargo = toolchain;
-          rustc = toolchain;
-        };
+        craneLib = (inputs.crane.mkLib pkgs).overrideToolchain toolchain;
 
         # This is a mock git program, which just returns the commit-substr value.
         # It is called when the build process calls git. Instead of the real git,
@@ -76,7 +77,7 @@
           isGitIgnored path type
           && builtins.all (name: builtins.baseNameOf path != name) ignoreList;
       in rec {
-        defaultPackage = naersk.buildPackage {
+        defaultPackage = craneLib.buildPackage {
           pname = name;
           inherit version;
 
@@ -100,7 +101,7 @@
 
           LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
           PROTOC = "${pkgs.protobuf}/bin/protoc";
-          singleStep = true;
+          SKIP_WASM_BUILD = 1;
 
           doCheck = false;
         };
@@ -126,6 +127,7 @@
             Volumes = { "/data" = { }; };
             Entrypoint = [ "centrifuge-chain" ];
           };
+
         };
 
         packages.dockerImageFastRuntime = packages.dockerImage.overrideAttrs

@@ -43,17 +43,6 @@
         };
         craneLib = (inputs.crane.mkLib pkgs).overrideToolchain toolchain;
 
-        # This is a mock git program, which just returns the commit-substr value.
-        # It is called when the build process calls git. Instead of the real git,
-        # it will find this one.
-        git-mock = let
-          # This evaluates to the first 7 digits of the git hash of this repo's HEAD
-          # commit, or to "dirty" if there are uncommitted changes.
-          commit-substr = builtins.substring 0 7 (inputs.self.rev or "dirty");
-        in pkgs.writeShellScriptBin "git" ''
-          echo ${commit-substr}
-        '';
-
         # srcFilter is used to keep out of the build non-source files,
         # so that we only trigger a rebuild when necessary.
         srcFilter = src:
@@ -83,7 +72,7 @@
             name = "${name}-source";
           };
 
-          nativeBuildInputs = with pkgs; [ clang git-mock pkg-config ];
+          nativeBuildInputs = with pkgs; [ clang pkg-config ];
           buildInputs = with pkgs;
             [ openssl ] ++ (lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security

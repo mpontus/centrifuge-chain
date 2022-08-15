@@ -76,21 +76,12 @@
           in path: type:
           isGitIgnored path type
           && builtins.all (name: builtins.baseNameOf path != name) ignoreList;
-      in rec {
-        defaultPackage = craneLib.buildPackage {
-          pname = name;
-          inherit version;
-
-          # This applies the srcFilter function to the current directory, so
-          # we don't include unnecessary files in the package.
+        commonAttrs = {
           src = pkgs.lib.cleanSourceWith {
             src = ./.;
             filter = srcFilter ./.;
             name = "${name}-source";
           };
-
-          # This is a hash of all the Cargo dependencies, for reproducibility.
-          cargoSha256 = "sha256-ZmbFuv2+Rlmi3Vr5pYfiFsGHC32agm0pMtuPiw+LMWs=";
 
           nativeBuildInputs = with pkgs; [ clang git-mock pkg-config ];
           buildInputs = with pkgs;
@@ -101,10 +92,16 @@
 
           LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
           PROTOC = "${pkgs.protobuf}/bin/protoc";
-          SKIP_WASM_BUILD = 1;
 
           doCheck = false;
         };
+        # Build dependencies only to cache them in CI
+        cargoArtifacts = craneLib.buildDepsOnly commonAttrs;
+      in rec {
+        defaultPackage = craneLib.buildPackage (commonAttrs // {
+          pname = name;
+          inherit version cargoArtifacts;
+        });
 
         packages.fastRuntime = defaultPackage.overrideAttrs
           (base: { buildFeatures = [ "fast-runtime" ]; });

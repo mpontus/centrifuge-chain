@@ -16,7 +16,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     naersk = {
-      url = github:nmattia/naersk;
+      url = github:nmattia/naersk/improve-dependency-handling;
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

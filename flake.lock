@@ -63,15 +63,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1659610603,
-        "narHash": "sha256-LYgASYSPYo7O71WfeUOaEUzYfzuXm8c8eavJcel+pfI=",
+        "lastModified": 1652723324,
+        "narHash": "sha256-xYhGLjZrlZFySza8hlpp4gSUzgEef+EawwWcQ2hduNU=",
         "owner": "nmattia",
         "repo": "naersk",
-        "rev": "c6a45e4277fa58abd524681466d3450f896dc094",
+        "rev": "23088edbc9e326cad7522b69e9c20aa463a496f2",
         "type": "github"
       },
       "original": {
         "owner": "nmattia",
+        "ref": "improve-dependency-handling",
         "repo": "naersk",
         "type": "github"
       }

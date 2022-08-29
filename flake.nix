@@ -48,7 +48,7 @@
           LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
           PROTOC = "${pkgs.protobuf}/bin/protoc";
 
-          copySources = [ "runtime/development" ];
+          singleStep = true;
         };
       });
 }
